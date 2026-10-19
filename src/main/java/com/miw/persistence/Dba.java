@@ -34,7 +34,7 @@ public class Dba {
 
 		outer = emf.createEntityManager();
 
-		if (readOnly == false) {
+		if (!readOnly) {
 			outer.getTransaction().begin();
 		}
 	}
@@ -111,8 +111,7 @@ public class Dba {
 
 			} catch (Throwable t) {
 				logger.error("Failed to setup persistence unit!", t);
-				return;
-			}
+            }
 		}
 	}
 }

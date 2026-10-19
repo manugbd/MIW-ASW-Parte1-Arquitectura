@@ -11,7 +11,7 @@ public class ControllerConfigurationManager {
 
 	protected Logger logger = LogManager.getLogger(getClass());
 	private static ControllerConfigurationManager instance = null;
-	private Properties data;
+	private final Properties data;
 
 	public static synchronized ControllerConfigurationManager getInstance() {
 		if (instance == null) {
