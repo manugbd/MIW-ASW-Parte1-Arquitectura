@@ -33,7 +33,7 @@ public class ControllerServlet extends HttpServlet {
 		// We execute the received command
 		String action = req.getParameter("action");
 		if (action != null) {
-			logger.debug("Executing action" + action);
+            logger.debug("Executing action{}", action);
 
 			command = ControllerConfigurationManager.getInstance().getCommand(action);
 
@@ -41,15 +41,15 @@ public class ControllerServlet extends HttpServlet {
 			if (command != null) {
 				// dependency injection
 				if (command instanceof ServletRequestAware) {
-					logger.debug("Injecting request in command " + action);
+                    logger.debug("Injecting request in command {}", action);
 					((ServletRequestAware) command).setServletRequest(req);
 				}
 				if (command instanceof HttpSessionAware) {
-					logger.debug("Injecting session in command " + action);
+                    logger.debug("Injecting session in command {}", action);
 					((HttpSessionAware) command).setHttpSession(req.getSession());
 				}
 				if (command instanceof ServletContextAware) {
-					logger.debug("Injecting session in command " + action);
+                    logger.debug("Injecting session in command {}", action);
 					((ServletContextAware) command).setServletContext(req.getServletContext());
 				}
 
@@ -71,18 +71,13 @@ public class ControllerServlet extends HttpServlet {
 				Method m = command.getClass().getMethod("set" + s.substring(0, 1).toUpperCase() + s.substring(1),
 						String.class);
 				if (m != null) {
-					logger.debug("Found expected parameter " + "set" + s.substring(0, 1).toUpperCase() + s.substring(1)
-							+ ", populating the value");
+                    logger.debug("Found expected parameter set{}{}, populating the value", s.substring(0, 1).toUpperCase(), s.substring(1));
 					try {
 						m.invoke(command, req.getParameter(s));
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
-					} catch (IllegalArgumentException e) {
-						e.printStackTrace();
-					} catch (InvocationTargetException e) {
+					} catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
 						e.printStackTrace();
 					}
-				}
+                }
 			} catch (NoSuchMethodException e) {
 				// TODO Auto-generated catch block
 				// e.printStackTrace();

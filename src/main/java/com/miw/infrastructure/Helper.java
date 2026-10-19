@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 
 /**
- * Esta clase solo tiene métodos de utilidad usados desde @see Factories
+ * Esta clase solo tiene mÃ©todos de utilidad usados desde @see Factories
  * 
  * @author alb
  *
@@ -31,22 +31,11 @@ public class Helper {
 			Class<?> clazz = Class.forName(className);
 			return clazz.getDeclaredConstructor().newInstance();
 			
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalArgumentException e) {
-			throw new RuntimeException(e);
-		} catch (InvocationTargetException e) {
-			throw new RuntimeException(e);
-		} catch (NoSuchMethodException e) {
-			throw new RuntimeException(e);
-		} catch (SecurityException e) {
+		} catch (ClassNotFoundException | SecurityException | NoSuchMethodException | InvocationTargetException |
+                 IllegalArgumentException | IllegalAccessException | InstantiationException e) {
 			throw new RuntimeException(e);
 		}
-	}
+    }
 
 	/**
 	 * Carga un propiedad desde fichero de propiedades

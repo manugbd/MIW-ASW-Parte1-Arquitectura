@@ -21,7 +21,7 @@ public class ShowBooksCommand implements Command, HttpSessionAware, ServletReque
 	}
 
 	public void setMyParameter(String myParameter) {
-		logger.debug("Setting myParameter to "+myParameter);
+        logger.debug("Setting myParameter to {}", myParameter);
 		this.myParameter = myParameter;
 	}
 

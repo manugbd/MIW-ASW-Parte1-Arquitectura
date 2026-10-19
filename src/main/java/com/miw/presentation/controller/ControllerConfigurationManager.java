@@ -26,7 +26,7 @@ public class ControllerConfigurationManager {
 		try {
 			InputStream file = ControllerConfigurationManager.class.getClassLoader()
 					.getResourceAsStream("controller.properties");
-			logger.debug("Loading " + file);
+            logger.debug("Loading {}", file);
 			data.load(file);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -40,26 +40,13 @@ public class ControllerConfigurationManager {
 			Class<?> clazz = Class.forName(data.getProperty(action + ".command"));
 			return (Command) clazz.getDeclaredConstructor().newInstance();
 
-		} catch (ClassNotFoundException e) {
+		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
 			throw new RuntimeException(e);
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchMethodException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SecurityException e) {
+		} catch (IllegalArgumentException | SecurityException | NoSuchMethodException | InvocationTargetException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
+        return null;
 	}
 
 	public String getForward(String action) {

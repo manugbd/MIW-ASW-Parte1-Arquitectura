@@ -14,7 +14,7 @@ public class ShowSpecialOfferCommand implements Command, ServletRequestAware {
 	
 	public void execute()
 	{
-		logger.debug("Executing "+this.getClass().getName());
+        logger.debug("Executing {}", this.getClass().getName());
 		BookManagerServiceHelper helper = new BookManagerServiceHelper();
 		try {
 			request.setAttribute("book", helper.getSpecialOffer());

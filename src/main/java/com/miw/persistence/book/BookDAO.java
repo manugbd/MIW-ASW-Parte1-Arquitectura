@@ -24,9 +24,9 @@ public class BookDAO implements BookDataService  {
 
 			resultList = em.createQuery("Select a From Book a", Book.class).getResultList();
 
-			logger.debug("Result list: "+ resultList.toString());
+            logger.debug("Result list: {}", resultList.toString());
 			for (Book next : resultList) {
-				logger.debug("next book: " + next);
+                logger.debug("next book: {}", next);
 			}
 
 		} finally {

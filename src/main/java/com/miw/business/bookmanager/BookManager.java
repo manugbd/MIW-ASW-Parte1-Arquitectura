@@ -26,7 +26,7 @@ public class BookManager implements BookManagerService {
 	{
 		List<Book> books = getBooks();
 		int number = (int) (Math.random()*books.size());
-		logger.debug("Applying disccount to "+books.get(number).getTitle());
+        logger.debug("Applying disccount to {}", books.get(number).getTitle());
 		books.get(number).setPrice(books.get(number).getPrice() *0.85);
 		return books.get(number);
 	}
