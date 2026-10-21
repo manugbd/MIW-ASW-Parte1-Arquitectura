@@ -19,7 +19,7 @@ public class ShowSpecialOfferCommand implements Command, ServletRequestAware {
 		try {
 			request.setAttribute("book", helper.getSpecialOffer());
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 

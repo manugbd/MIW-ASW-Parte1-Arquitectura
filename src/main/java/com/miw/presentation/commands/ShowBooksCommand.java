@@ -31,7 +31,7 @@ public class ShowBooksCommand implements Command, HttpSessionAware, ServletReque
 		try {
 			request.setAttribute("books", helper.getBooks());
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 
