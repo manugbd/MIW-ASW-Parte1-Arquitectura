@@ -20,7 +20,7 @@ public class ControllerConfigurationManager {
 		return instance;
 	}
 
-	public ControllerConfigurationManager() {
+	private ControllerConfigurationManager() {
 		// We load the properties file
 		data = new Properties();
 		try {
