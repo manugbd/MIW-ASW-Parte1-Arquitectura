@@ -1,43 +1,39 @@
-package com.miw.presentation.controller;
+package com.miw.presentation.configuration;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
+
 import org.apache.logging.log4j.*;
 import com.miw.presentation.commands.Command;
 
-public class ControllerConfigurationManager {
+public class ControllerConfigurationManager extends AbstractConfigurationManager {
 
-	protected Logger logger = LogManager.getLogger(getClass());
+	// Constants
+	private static final String CONTROLLER_PROPERTIES_FILENAME = "controller.properties";
+
+	// Logger
+	private final Logger logger = LogManager.getLogger(getClass());
+
+	// Properties files
+	private final Properties properties;
+
+	// Singleton
 	private static ControllerConfigurationManager instance = null;
-	private final Properties data;
 
 	public static synchronized ControllerConfigurationManager getInstance() {
-		if (instance == null) {
-			instance = new ControllerConfigurationManager();
-		}
+		if (instance == null) instance = new ControllerConfigurationManager();
 		return instance;
 	}
 
+	// Private constructor
 	private ControllerConfigurationManager() {
-		// We load the properties file
-		data = new Properties();
-		try {
-			InputStream file = ControllerConfigurationManager.class.getClassLoader()
-					.getResourceAsStream("controller.properties");
-            logger.debug("Loading {}", file);
-			data.load(file);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
+		properties = loadProperties(CONTROLLER_PROPERTIES_FILENAME);
 	}
 
 	public Command getCommand(String action) {
 		try {
 
-			Class<?> clazz = Class.forName(data.getProperty(action + ".command"));
+			Class<?> clazz = Class.forName(properties.getProperty(action + ".command"));
 			return (Command) clazz.getDeclaredConstructor().newInstance();
 
 		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
@@ -49,7 +45,11 @@ public class ControllerConfigurationManager {
         return null;
 	}
 
+	public String getDeniedForward(String action) {
+		return properties.getProperty(action + ".denied");
+	}
+
 	public String getForward(String action) {
-		return data.getProperty(action + ".success");
+		return properties.getProperty(action + ".success");
 	}
 }

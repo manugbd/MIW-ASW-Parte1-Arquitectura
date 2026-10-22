@@ -1,5 +1,7 @@
-package com.miw.presentation.interceptors;
+package com.miw.presentation.interceptors.impl;
 
+import com.miw.presentation.interceptors.Interceptor;
+import com.miw.presentation.interceptors.InvocationContext;
 import org.apache.logging.log4j.Logger;
 
 import java.time.Instant;

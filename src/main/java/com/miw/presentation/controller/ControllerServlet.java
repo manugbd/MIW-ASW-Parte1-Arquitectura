@@ -1,11 +1,11 @@
 package com.miw.presentation.controller;
 
 import com.miw.presentation.commands.Command;
-import com.miw.presentation.di.HttpSessionAware;
-import com.miw.presentation.di.ServletContextAware;
-import com.miw.presentation.di.ServletRequestAware;
+import com.miw.presentation.configuration.ControllerConfigurationManager;
+import com.miw.presentation.configuration.InterceptorConfigurationManager;
+import com.miw.presentation.di.DependencyInjector;
+import com.miw.presentation.di.impl.DependencyInjectorImpl;
 import com.miw.presentation.interceptors.Interceptor;
-import com.miw.presentation.interceptors.InterceptorConfigurationManager;
 import com.miw.presentation.interceptors.InterceptorExecutor;
 import com.miw.presentation.interceptors.InvocationContext;
 import jakarta.servlet.ServletException;
@@ -30,8 +30,6 @@ public class ControllerServlet extends HttpServlet {
 
 	protected Logger logger = LogManager.getLogger(getClass());
 
-	Command command = null;
-
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		String action = req.getParameter("action");
@@ -42,19 +40,20 @@ public class ControllerServlet extends HttpServlet {
 
 		logger.debug("Executing action{}", action);
 
-		command = ControllerConfigurationManager.getInstance().getCommand(action);
+		Command command = ControllerConfigurationManager.getInstance().getCommand(action);
 
 		if (command == null)
 			throw new IllegalStateException("No se pudo crear el comando: " + action);
 
 		InvocationContext context;
 		try {
-			injectDependencies(command, req, action);
-			populateParameters(req);
+			DependencyInjector dependencyInjector = DependencyInjectorImpl.getInstance();
+			dependencyInjector.inject(command, req);
+			populateParameters(command,req);
 
 			List<Interceptor> interceptors = InterceptorConfigurationManager.getInstance().getInterceptors(action);
 			for (Interceptor interceptor : interceptors)
-				injectDependencies(interceptor, req, action);
+				dependencyInjector.inject(interceptor, req);
 
 			context = new InvocationContext(action, command.getClass().getName());
 			new InterceptorExecutor().execute(command, context, interceptors);
@@ -63,7 +62,15 @@ public class ControllerServlet extends HttpServlet {
 		}
 
 		if (context.isDenied()) {
-			resp.sendError(HttpServletResponse.SC_FORBIDDEN, context.getDenialMessage());
+			String deniedForward = ControllerConfigurationManager.getInstance().getDeniedForward(action);
+			if (deniedForward == null || deniedForward.isBlank()) {
+				resp.sendError(HttpServletResponse.SC_FORBIDDEN, context.getDenialMessage());
+				return;
+			}
+			req.setAttribute("error", true);
+			req.setAttribute("errorMessage", context.getDenialMessage());
+			resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			req.getRequestDispatcher(deniedForward).forward(req, resp);
 			return;
 		}
 		if (!context.wasCommandExecuted())
@@ -74,42 +81,18 @@ public class ControllerServlet extends HttpServlet {
 
 	}
 
-	private void injectDependencies(Object target, HttpServletRequest req, String action)
-			throws IllegalAccessException, InvocationTargetException {
-		// 2.3 Inyeccion por las interfaces existentes.
-		if (command instanceof ServletRequestAware) {
-			logger.debug("Injecting request in command {}", action);
-			((ServletRequestAware) command).setServletRequest(req);
-		}
-		if (command instanceof HttpSessionAware) {
-			logger.debug("Injecting session in command {}", action);
-			((HttpSessionAware) command).setHttpSession(req.getSession());
-		}
-		if (command instanceof ServletContextAware) {
-			logger.debug("Injecting session in command {}", action);
-			((ServletContextAware) command).setServletContext(req.getServletContext());
-		}
-
-		// 2.3 Inyeccion del logger por setter, descubierto mediante reflexion.
-		Method setter;
-		try {
-			setter = target.getClass().getMethod("setLogger", Logger.class);
-		} catch (NoSuchMethodException e) {
-			return;
-		}
-		setter.invoke(target, LogManager.getLogger(target.getClass()));
-	}
-
-	private void populateParameters(HttpServletRequest req) {
+	private void populateParameters(Command command, HttpServletRequest req) {
 		for (String param : req.getParameterMap().keySet()) {
+			if (param.isEmpty() || "action".equals(param))
+				continue;
 
 			String setterName = "set" + Character.toUpperCase(param.charAt(0)) + param.substring(1);
+			Method setter;
 			try {
-
-				Method m = command.getClass().getMethod(setterName, String.class);
+				setter = command.getClass().getMethod(setterName, String.class);
                 logger.debug("Found expected parameter set{}{}, populating the value", param.substring(0, 1).toUpperCase(), param.substring(1));
                 try {
-                    m.invoke(command, req.getParameter(param));
+					setter.invoke(command, req.getParameter(param));
                 } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
                     e.printStackTrace();
                 }

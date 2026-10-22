@@ -7,12 +7,12 @@ import com.miw.persistence.DataServicesFactory;
  * Esta clase es la que realemente relaciona las interfaces de las capas con sus
  * implementaciones finales.
  * <p>
- * Se toma la configración de un fichero de propiedades de manera que cambiar la
- * configraciónn de la aplicación (cambiar de implementación en alguna capa)
- * quedará ahora reducido a cambiar el contenido del fichero
+ * Se toma la configracion de un fichero de propiedades de manera que cambiar la
+ * configracion de la aplicacion (cambiar de implementacion en alguna capa)
+ * quedara ahora reducido a cambiar el contenido del fichero
  * "factories.properties".
  * <p>
- * Este fichero, para esta implementación debe tener al menos estas dos
+ * Este fichero, para esta implementacion debe tener al menos estas dos
  * propiedades SERVICES_FACTORY y PERSISTENCE_FACTORY
  * <p>
  * Hay frameworks especializados en esto precisamente, por ejemplo Spring.

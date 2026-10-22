@@ -1,23 +1,22 @@
-package com.miw.presentation.interceptors;
+package com.miw.presentation.configuration;
 
+import com.miw.presentation.interceptors.Interceptor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-public class InterceptorConfigurationManager {
+public class InterceptorConfigurationManager extends AbstractConfigurationManager {
 
     // Constants
     private static final String INTERCEPTORS_PROPERTIES_FILENAME = "interceptors.properties";
     private static final String COMMANDS_PROPERTIES_FILENAME = "commands.properties";
 
     // Logger
-    protected Logger logger = LogManager.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
 
     // Properties files
     private final Properties interceptorDefinitions;
@@ -44,7 +43,7 @@ public class InterceptorConfigurationManager {
         if (configuredValueList == null)
             throw new IllegalStateException("Falta la configuracion de interceptores: " + key);
 
-        // Un valor vacío permite declarar explícitamente una cadena vacía.
+        // Un valor vacio permite declarar explicitamente una cadena vacia.
         if (configuredValueList.isBlank()) return List.of();
 
         List<Interceptor> result = new ArrayList<>();
@@ -75,20 +74,6 @@ public class InterceptorConfigurationManager {
 
         } catch (ReflectiveOperationException | ClassCastException e) {
             throw new IllegalStateException("No se puede crear el interceptor: " + id + " (" + className + ")", e);
-        }
-    }
-
-
-    private Properties loadProperties(String filename) {
-        Properties properties = new Properties();
-
-        try (InputStream input = InterceptorConfigurationManager.class.getClassLoader().getResourceAsStream(filename)) {
-            if (input == null) throw new IllegalStateException("No se encuentra el archivo: " + filename);
-
-            properties.load(input);
-            return properties;
-        } catch (IOException e) {
-            throw new IllegalStateException("No se puede cargar el archivo: " + filename, e);
         }
     }
 }

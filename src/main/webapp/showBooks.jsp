@@ -1,7 +1,6 @@
 <!DOCTYPE html >
 <%@ page contentType="text/html; charset=iso-8859-1"
 	pageEncoding="iso-8859-1" language="java"
-	import="java.util.*, com.miw.model.Book,com.miw.presentation.book.*"
 	errorPage=""%>
 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
