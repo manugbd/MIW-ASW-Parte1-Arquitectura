@@ -21,9 +21,17 @@ public class AuthorizationInterceptor implements Interceptor, HttpSessionAware {
     }
 
     @Override
-    public void intercept(InvocationContext context) throws Exception {
-        if (logger == null) throw new IllegalStateException("El framework no ha inyectado el logger");
+    public boolean before(InvocationContext context) {
+        if (logger == null || session == null)
+            throw new IllegalStateException("Faltan dependencias en AuthorizationInterceptor");
 
-        context.proceed();
+        logger.warn("Autorizacion pendiente de implementar: action={}", context.getAction());
+        context.deny("El interceptor de autorizacion esta pendiente de implementar");
+        return false;
+    }
+
+    @Override
+    public void after(InvocationContext context) {
+        // Empty method - No execute
     }
 }

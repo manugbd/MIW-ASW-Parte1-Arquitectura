@@ -1,18 +1,66 @@
 package com.miw.presentation.interceptors;
 
-public interface InvocationContext {
+import java.util.Objects;
 
-    String getAction();
+public final class InvocationContext {
+    private final String action;
+    private final String commandName;
+    private boolean commandStarted;
+    private boolean commandExecuted;
+    private boolean denied;
+    private String denialMessage;
+    private Throwable failure;
 
-    String getCommandName();
+    public InvocationContext(String action, String commandName) {
+        this.action = Objects.requireNonNull(action);
+        this.commandName = Objects.requireNonNull(commandName);
+    }
 
-    void proceed() throws Exception;
+    public String getAction() {
+        return action;
+    }
 
-    void deny(String message);
+    public String getCommandName() {
+        return commandName;
+    }
 
-    boolean isDenied();
+    public boolean wasCommandExecuted() {
+        return commandExecuted;
+    }
 
-    String getDenialMessage();
+    public boolean isDenied() {
+        return denied;
+    }
 
-    boolean wasCommandExecuted();
+    public String getDenialMessage() {
+        return denialMessage;
+    }
+
+    public Throwable getFailure() {
+        return failure;
+    }
+
+    public void deny(String message) {
+        if (commandStarted)
+            throw new IllegalStateException("No se puede denegar un comando ya iniciado");
+        denialMessage = Objects.requireNonNull(message);
+        denied = true;
+    }
+
+    void startCommand() {
+        if (commandStarted)
+            throw new IllegalStateException("El comando ya se ha iniciado");
+        commandStarted = true;
+    }
+
+    void completeCommand() {
+        commandExecuted = true;
+    }
+
+    void recordFailure(Throwable error) {
+        if (failure == null)
+            failure = error;
+        else if (failure != error)
+            failure.addSuppressed(error);
+    }
 }

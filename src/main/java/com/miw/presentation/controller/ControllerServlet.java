@@ -5,9 +5,9 @@ import com.miw.presentation.di.HttpSessionAware;
 import com.miw.presentation.di.ServletContextAware;
 import com.miw.presentation.di.ServletRequestAware;
 import com.miw.presentation.interceptors.Interceptor;
-import com.miw.presentation.interceptors.InterceptorChain;
 import com.miw.presentation.interceptors.InterceptorConfigurationManager;
-import jakarta.servlet.RequestDispatcher;
+import com.miw.presentation.interceptors.InterceptorExecutor;
+import com.miw.presentation.interceptors.InvocationContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -36,7 +36,7 @@ public class ControllerServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		String action = req.getParameter("action");
 		if (action == null || action.isEmpty()) {
-			resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Falta la acción");
+			resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Falta la accion");
 			return;
 		}
 
@@ -47,7 +47,7 @@ public class ControllerServlet extends HttpServlet {
 		if (command == null)
 			throw new IllegalStateException("No se pudo crear el comando: " + action);
 
-		InterceptorChain chain;
+		InvocationContext context;
 		try {
 			injectDependencies(command, req, action);
 			populateParameters(req);
@@ -56,18 +56,18 @@ public class ControllerServlet extends HttpServlet {
 			for (Interceptor interceptor : interceptors)
 				injectDependencies(interceptor, req, action);
 
-			chain = new InterceptorChain(action, command, interceptors);
-			chain.proceed();
+			context = new InvocationContext(action, command.getClass().getName());
+			new InterceptorExecutor().execute(command, context, interceptors);
 		} catch (Exception e) {
-			throw new ServletException("Error ejecutando la acción " + action, e);
+			throw new ServletException("Error ejecutando la accion " + action, e);
 		}
 
-		if (chain.isDenied()) {
-			resp.sendError(HttpServletResponse.SC_FORBIDDEN, chain.getDenialMessage());
+		if (context.isDenied()) {
+			resp.sendError(HttpServletResponse.SC_FORBIDDEN, context.getDenialMessage());
 			return;
 		}
-		if (!chain.wasCommandExecuted())
-			throw new ServletException("La cadena terminó sin ejecutar el comando");
+		if (!context.wasCommandExecuted())
+			throw new ServletException("La cadena termino sin ejecutar el comando");
 
 		String forward = ControllerConfigurationManager.getInstance().getForward(action);
 		req.getRequestDispatcher(forward).forward(req, resp);
@@ -76,7 +76,7 @@ public class ControllerServlet extends HttpServlet {
 
 	private void injectDependencies(Object target, HttpServletRequest req, String action)
 			throws IllegalAccessException, InvocationTargetException {
-		// 2.3 Inyección por las interfaces existentes.
+		// 2.3 Inyeccion por las interfaces existentes.
 		if (command instanceof ServletRequestAware) {
 			logger.debug("Injecting request in command {}", action);
 			((ServletRequestAware) command).setServletRequest(req);
@@ -90,7 +90,7 @@ public class ControllerServlet extends HttpServlet {
 			((ServletContextAware) command).setServletContext(req.getServletContext());
 		}
 
-		// 2.3 Inyección del logger por setter, descubierto mediante reflexión.
+		// 2.3 Inyeccion del logger por setter, descubierto mediante reflexion.
 		Method setter;
 		try {
 			setter = target.getClass().getMethod("setLogger", Logger.class);

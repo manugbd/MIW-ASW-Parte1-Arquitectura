@@ -7,6 +7,9 @@ import java.util.Objects;
 
 public class LoggingInterceptor implements Interceptor {
 
+    private long startTime;
+    private boolean started;
+
     // 2.3 Logger por setter
     private Logger logger;
 
@@ -15,39 +18,35 @@ public class LoggingInterceptor implements Interceptor {
     }
 
     @Override
-    public void intercept(InvocationContext context) throws Exception {
-        if (logger == null) throw new IllegalStateException("El framework no ha inyectado el logger");
+    public boolean before(InvocationContext context) {
+        if (logger == null)
+            throw new IllegalStateException("El framework no ha inyectado el logger");
 
-        Instant startDate = Instant.now();
-        long startTime = System.nanoTime();
-
+        startTime = System.nanoTime();
+        started = true;
         logger.info("Inicio: action={}, command={}, fecha={}",
-                context.getAction(),
-                context.getCommandName(),
-                startDate);
+                context.getAction(), context.getCommandName(), Instant.now());
+        return true;
+    }
+
+    @Override
+    public void after(InvocationContext context) {
+        if (!started)
+            return;
+
+        double milliseconds = (System.nanoTime() - startTime) / 1_000_000.0;
 
         try {
-            context.proceed();
-
-            if (context.isDenied()) {
+            if (context.getFailure() != null)
+                logger.error("Finalizacion con excepcion: command={}", context.getCommandName(), context.getFailure());
+            else if (context.isDenied())
                 logger.warn("Ejecucion denegada: action={}, motivo={}", context.getAction(), context.getDenialMessage());
-
-            } else if (context.wasCommandExecuted()) {
-                logger.info("Finalizacion correcta: command={}", context.getCommandName());
-
-            } else logger.warn("Cadena interrumpida sin ejecutar el comando: action={}", context.getAction());
-
-        } catch (Exception | Error e) {
-            logger.error("Finalizacion con excepcion: command= {}", context.getCommandName(), e);
-            throw e;
-
+            else if (context.wasCommandExecuted())
+                logger.info("Finalizacion sin excepcion propagada: command={}", context.getCommandName());
+            else
+                logger.warn("Comando no ejecutado: action={}", context.getAction());
         } finally {
-            double elapsedMilliseconds = (System.nanoTime() - startTime) / 1_000_000.0;
-
-            logger.info("Duracion: action={}, command={}, milisegundos={}",
-                    context.getAction(),
-                    context.getCommandName(),
-                    elapsedMilliseconds);
+            logger.info("Duracion: action={}, command={}, milisegundos={}", context.getAction(), context.getCommandName(), milliseconds);
         }
     }
 }
